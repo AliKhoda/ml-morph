@@ -24,6 +24,8 @@ ap.add_argument("-nu", "--nu", type=float, default=0.1,
     help="regularization parameter (default = 0.1)", metavar='')
 ap.add_argument("-os", "--oversampling", type=int, default=10,
     help="oversampling amount (default = 10)", metavar='')
+# ap.add_argument("-tj", "--translation-jitter", type=float, default=0.25,
+#     help="translation jittering amount (default = 0.25)", metavar='')
 ap.add_argument("-s", "--test-splits", type=int, default=20,
     help="number of test splits (default = 20)", metavar='')
 ap.add_argument("-f", "--feature-pool-size", type=int, default=500,
@@ -42,6 +44,7 @@ options.cascade_depth = args['cascade_depth']
 options.feature_pool_size = args['feature_pool_size']
 options.num_test_splits = args['test_splits']
 options.oversampling_amount = args['oversampling']
+# options.oversampling_translation_jitter = args['translation_jitter']
 options.be_verbose = True
 
 #Training the model

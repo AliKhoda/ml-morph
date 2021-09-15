@@ -266,8 +266,28 @@ def image_prep(file, name, dir_path):
         cv2.imwrite(os.path.join(dir_path,name), img)
     return file_sz
 
-
-        
+def prediction_box(img, d, predictor, ignore):
+    shape = predictor(img, d)
+    box = ET.Element('box')
+    box.set('top', str(int(d.top())))
+    box.set('left', str(int(d.left())))
+    box.set('width', str(int(d.right()-d.left())))
+    box.set('height', str(int(d.bottom()-d.top()))) 
+    for i in range(0,shape.num_parts):
+        if ignore is not None:
+            if i not in ignore:
+                part = ET.Element('part')
+                part.set('name',str(int(i)))
+                part.set('x',str(int(shape.part(i).x)))
+                part.set('y',str(int(shape.part(i).y)))
+                box.append(part)
+        else:
+            part = ET.Element('part')
+            part.set('name',str(int(i)))
+            part.set('x',str(int(shape.part(i).x)))
+            part.set('y',str(int(shape.part(i).y)))
+            box.append(part)
+    return box 
 
 # Tools for predicting objects and shapes in new images
 
@@ -291,7 +311,8 @@ def predictions_to_xml(detector_name:str, predictor_name:str,dir='pred',upsample
     
     '''
     predictor = dlib.shape_predictor(predictor_name)
-    detector = dlib.fhog_object_detector(detector_name)
+    if detector_name is not None:
+        detector = dlib.fhog_object_detector(detector_name)
     root = ET.Element('dataset')
     root.append(ET.Element('name'))
     root.append(ET.Element('comment'))
@@ -302,31 +323,21 @@ def predictions_to_xml(detector_name:str, predictor_name:str,dir='pred',upsample
         img = cv2.imread(f)
         image_e = ET.Element('image')
         image_e.set('file', str(f))
-        [boxes, confidences, detector_idxs] = dlib.fhog_object_detector.run(
-            detector, img, upsample_num_times=upsample, adjust_threshold=threshold)
-        for k, d in enumerate(boxes):    
-            shape = predictor(img, d)
-            box = ET.Element('box')
-            box.set('top', str(int(d.top())))
-            box.set('left', str(int(d.left())))
-            box.set('width', str(int(d.right()-d.left())))
-            box.set('height', str(int(d.bottom()-d.top()))) 
-            for i in range(0,shape.num_parts):
-                if ignore is not None:
-                    if i not in ignore:
-                        part = ET.Element('part')
-                        part.set('name',str(int(i)))
-                        part.set('x',str(int(shape.part(i).x)))
-                        part.set('y',str(int(shape.part(i).y)))
-                        box.append(part)
-                else:
-                    part = ET.Element('part')
-                    part.set('name',str(int(i)))
-                    part.set('x',str(int(shape.part(i).x)))
-                    part.set('y',str(int(shape.part(i).y)))
-                    box.append(part)
+        if detector_name is not None:
+            [boxes, confidences, detector_idxs] = dlib.fhog_object_detector.run(
+                detector, img, upsample_num_times=upsample, adjust_threshold=threshold)
+            for k, d in enumerate(boxes):
+                box = prediction_box(img, d, predictor, ignore)
+                
+                image_e.append(box)
             
+        else:
+            d = dlib.rectangle(left=0, top=0, right = img.shape[1], bottom=img.shape[0])
+
+            box = prediction_box(img, d, predictor, ignore)
+                
             image_e.append(box)
+
         images_e.append(image_e)
 
     et = ET.ElementTree(root)

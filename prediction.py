@@ -5,7 +5,7 @@ import utils
 
 ap = argparse.ArgumentParser()
 ap.add_argument('-i','--input-dir', type=str, default='pred', help="input directory (default = pred)", metavar='')
-ap.add_argument('-d','--detector', type=str, default='detector.svm', help="trained object detection model (default = detector.svm)", metavar='')
+ap.add_argument('-d','--detector', type=str, default=None, help="trained object detection model (default = detector.svm)", metavar='')
 ap.add_argument('-p','--predictor', type=str, default='predictor.dat', help="trained shape prediction model (default = predictor.dat)", metavar='')
 ap.add_argument('-o','--out-file', type=str, default='output.xml', help="output file name (default = output.xml)", metavar='')
 ap.add_argument('-u','--upsample-limit', type=int, default=0, help="upsample limit (default= 0 ; max = 2)", metavar='')
