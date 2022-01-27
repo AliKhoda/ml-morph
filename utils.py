@@ -104,7 +104,7 @@ def add_part_element(bbox,num,sz):
     part.set('y',str(int(bbox[1])))
     return part
 
-def add_bbox_element(bbox,sz,padding=20):
+def add_bbox_element(bbox,sz0,sz1,padding=20,tight=True):
     '''
     Internal function used by generate_dlib_xml. It creates a 'bounding box' xml element containing the 
     four parameters that define the bounding box (top,left, width, height) based on the minimum and maximum XY 
@@ -123,24 +123,30 @@ def add_bbox_element(bbox,sz,padding=20):
     
     '''
     box = ET.Element('box')
-    height = bbox[:,1].max()-bbox[:,1].min()+2*padding
-    width = bbox[:,0].max()-bbox[:,0].min()+2*padding
-    top = sz-bbox[:,1].max()-padding
-    if top < 1:
-        top =1
-    left = bbox[:,0].min()-padding
-    if left < 1:
-        left =1
+    if tight:
+        height = bbox[:,1].max()-bbox[:,1].min()+2*padding
+        width = bbox[:,0].max()-bbox[:,0].min()+2*padding
+        top = sz0-bbox[:,1].max()-padding
+        if top < 1:
+            top =1
+        left = bbox[:,0].min()-padding
+        if left < 1:
+            left =1
+    else:
+        top = 1
+        left = 1
+        height = sz0
+        width = sz1
 
     box.set('top', str(int(top)))
     box.set('left', str(int(left)))
     box.set('width', str(int(width)))
     box.set('height', str(int(height)))
     for i in range(0,len(bbox)):
-        box.append(add_part_element(bbox[i,:],i,sz))
+        box.append(add_part_element(bbox[i,:],i,sz0))
     return box
 
-def add_image_element(image, coords, sz, path):
+def add_image_element(image, coords, sz0, sz1, path,tight):
     '''
     Internal function used by generate_dlib_xml. It creates a 'image' xml element containing the 
     image filename and its corresponding bounding boxes and parts. 
@@ -157,10 +163,10 @@ def add_image_element(image, coords, sz, path):
     '''
     image_e = ET.Element('image')
     image_e.set('file', str(path))
-    image_e.append(add_bbox_element(coords,sz))
+    image_e.append(add_bbox_element(coords,sz0,sz1,tight=tight))
     return image_e
 
-def generate_dlib_xml(images,sizes,folder='train',out_file='output.xml'):
+def generate_dlib_xml(images,sizes,folder='train',out_file='output.xml',tight=True):
     '''
     Generates a dlib format xml file for training or testing of machine learning models. 
     
@@ -190,10 +196,10 @@ def generate_dlib_xml(images,sizes,folder='train',out_file='output.xml'):
 
             if path in present_tags:
                 pos=present_tags.index(path)           
-                images_e[pos].append(add_bbox_element(images['coords'][i],sizes[name][0]))
+                images_e[pos].append(add_bbox_element(images['coords'][i],sizes[name][0],sizes[name][1],tight=tight))
 
             else:    
-                images_e.append(add_image_element(name,images['coords'][i],sizes[name][0],path))
+                images_e.append(add_image_element(name,images['coords'][i],sizes[name][0],sizes[name][1],path,tight=tight))
             
     et = ET.ElementTree(root)
     xmlstr = minidom.parseString(ET.tostring(et.getroot())).toprettyxml(indent="   ")
