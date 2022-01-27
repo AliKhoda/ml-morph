@@ -101,10 +101,10 @@ def add_part_element(bbox,num,sz):
     part = ET.Element('part')
     part.set('name',str(int(num)))
     part.set('x',str(int(bbox[0])))
-    part.set('y',str(int(sz-bbox[1])))
+    part.set('y',str(int(bbox[1])))
     return part
 
-def add_bbox_element(bbox,sz,padding=0):
+def add_bbox_element(bbox,sz,padding=20):
     '''
     Internal function used by generate_dlib_xml. It creates a 'bounding box' xml element containing the 
     four parameters that define the bounding box (top,left, width, height) based on the minimum and maximum XY 
@@ -203,7 +203,7 @@ def generate_dlib_xml(images,sizes,folder='train',out_file='output.xml'):
 #Directory preparation tools
 
 
-def split_train_test(input_dir):
+def split_train_test(input_dir, output_dir):
     '''
     Splits an image directory into 'train' and 'test' directories. The original image directory is preserved. 
     When creating the new directories, this function converts all image files to 'jpg'. The function returns
@@ -232,17 +232,15 @@ def split_train_test(input_dir):
     sizes={}
     for split in ['train','test']:
         sizes[split]={}
-        if not os.path.exists(split):
-            os.mkdir(split)
-        else:
+        if os.path.exists(os.path.join(output_dir, split)):
             print("Warning: the folder {} already exists. It's being replaced".format(split))
-            shutil.rmtree(split)
-            os.mkdir(split)
+            shutil.rmtree(os.path.join(output_dir, split))
+        os.makedirs(os.path.join(output_dir, split))
 
         for filename in filenames[split]:
             basename=os.path.basename(filename)
             name=os.path.splitext(basename)[0] + '.jpg'
-            sizes[split][name]=image_prep(filename,name,split)
+            sizes[split][name]=image_prep(filename,name,os.path.join(output_dir, split))
     return sizes
 
 def image_prep(file, name, dir_path):
