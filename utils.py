@@ -7,6 +7,7 @@ import re
 import random
 import shutil
 import glob
+# import tqdm
 
 #Not part of the standard library
 import numpy as np 
@@ -222,8 +223,11 @@ def split_train_test(input_dir, output_dir):
         sizes (dict): dictionary containing the image dimensions in the 'train' and 'test' directories.
     '''
     # Listing the filenames.Folders must contain only image files (extension can vary).Hidden files are ignored
-    filenames = os.listdir(input_dir)
-    filenames = [os.path.join(input_dir, f) for f in filenames if not f.startswith('.')]
+    # filenames = os.listdir(input_dir)
+    # filenames = [os.path.join(input_dir, f) for f in filenames if not f.startswith('.')]
+    filenames = glob.glob(os.path.join(input_dir, '*.png')) +\
+                glob.glob(os.path.join(input_dir, '*.jpg'))
+    print(input_dir)
 
     # Splitting the images into 'train' and 'test' directories (80/20 split)
     random.seed(845)
@@ -322,7 +326,7 @@ def predictions_to_xml(detector_name:str, predictor_name:str,dir='pred',upsample
     root.append(ET.Element('comment'))
     images_e = ET.Element('images')
     root.append(images_e)
-    for f in glob.glob(dir+"/*.jpg"):
+    for f in glob.glob(dir+"/*.jpg") + glob.glob(dir+"/*.png"):
         path, file = os.path.split(f)
         img = cv2.imread(f)
         image_e = ET.Element('image')
